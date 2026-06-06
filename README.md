@@ -81,7 +81,7 @@ Set `NEXT_PUBLIC_APP_URL` in **Vercel → Project → Settings → Environment V
 materialCost     = filamentUsedGrams × (pricePerKg / 1000)
 electricityCost  = (wattage / 1000) × (printTimeHours) × electricityRate
 depreciationCost = (purchasePrice / lifetimeHours) × printTimeHours
-labourCost       = labourEnabled ? labourTimeHours × labourRate : 0
+labourCost       = (labourTimeMinutes / 60) × labourRate   (0 if labour disabled)
 wasteCost        = subtotal × (failureRate / 100)
 totalCost        = subtotal + wasteCost
 ```
