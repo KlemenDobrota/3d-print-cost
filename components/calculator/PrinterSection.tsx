@@ -89,9 +89,10 @@ export function PrinterSection({
             type="number"
             min={0}
             step={0.01}
-            value={electricityRate}
-            onChange={(e) => onElectricityRateChange(parseFloat(e.target.value) || 0)}
-            className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-14 pl-7 text-slate-50 text-base focus:outline-none focus:border-indigo-500"
+            value={electricityRate === 0 ? "" : electricityRate}
+            placeholder="0"
+            onChange={(e) => onElectricityRateChange(Math.max(0, parseFloat(e.target.value) || 0))}
+            className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-14 pl-7 text-slate-50 text-base focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">/kWh</span>
         </div>
@@ -122,10 +123,11 @@ function NumField({ label, value, unit, unitLeft, onChange, min = 0, step = 1 }:
           type="number"
           min={min}
           step={step}
-          value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+          value={value === 0 ? "" : value}
+          placeholder="0"
+          onChange={(e) => onChange(Math.max(0, parseFloat(e.target.value) || 0))}
           className={cn(
-            "w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right text-slate-50 text-base focus:outline-none focus:border-indigo-500",
+            "w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right text-slate-50 text-base focus:outline-none focus:border-indigo-500 placeholder:text-slate-500",
             unitLeft ? "pl-7 pr-3" : "pl-3 pr-12"
           )}
         />

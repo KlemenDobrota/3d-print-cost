@@ -45,9 +45,10 @@ export function PrintDetailsSection({
               type="number"
               min={0}
               step={0.1}
-              value={filamentUsedGrams}
-              onChange={(e) => onFilamentChange(parseFloat(e.target.value) || 0)}
-              className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-10 pl-3 text-slate-50 text-base focus:outline-none focus:border-indigo-500"
+              value={filamentUsedGrams === 0 ? "" : filamentUsedGrams}
+              placeholder="0"
+              onChange={(e) => onFilamentChange(Math.max(0, parseFloat(e.target.value) || 0))}
+              className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-10 pl-3 text-slate-50 text-base focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">g</span>
           </div>
@@ -60,9 +61,10 @@ export function PrintDetailsSection({
               type="number"
               min={0}
               step={0.1}
-              value={resinUsedMl}
-              onChange={(e) => onResinChange(parseFloat(e.target.value) || 0)}
-              className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-10 pl-3 text-slate-50 text-base focus:outline-none focus:border-indigo-500"
+              value={resinUsedMl === 0 ? "" : resinUsedMl}
+              placeholder="0"
+              onChange={(e) => onResinChange(Math.max(0, parseFloat(e.target.value) || 0))}
+              className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-10 pl-3 text-slate-50 text-base focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">ml</span>
           </div>
@@ -79,9 +81,10 @@ export function PrintDetailsSection({
             min={0}
             max={100}
             step={1}
-            value={failureRate}
-            onChange={(e) => onFailureRateChange(parseFloat(e.target.value) || 0)}
-            className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-10 pl-3 text-slate-50 text-base focus:outline-none focus:border-indigo-500"
+            value={failureRate === 0 ? "" : failureRate}
+            placeholder="0"
+            onChange={(e) => onFailureRateChange(Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)))}
+            className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-10 pl-3 text-slate-50 text-base focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">%</span>
         </div>

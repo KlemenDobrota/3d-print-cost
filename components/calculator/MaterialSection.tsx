@@ -70,9 +70,10 @@ export function MaterialSection({
               type="number"
               min={0}
               step={0.01}
-              value={manualMaterialPrice}
-              onChange={(e) => onManualMaterialPriceChange(parseFloat(e.target.value) || 0)}
-              className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-14 pl-7 text-slate-50 text-base focus:outline-none focus:border-indigo-500"
+              value={manualMaterialPrice === 0 ? "" : manualMaterialPrice}
+              placeholder="0"
+              onChange={(e) => onManualMaterialPriceChange(Math.max(0, parseFloat(e.target.value) || 0))}
+              className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-14 pl-7 text-slate-50 text-base focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">
               {priceLabel}
