@@ -1,11 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useCalculatorStore } from "@/hooks/useCalculatorStore";
+import { useCalculatorStore, createDraftMaterial } from "@/hooks/useCalculatorStore";
 import { useSettings } from "@/hooks/useSettings";
 import { usePrinters } from "@/hooks/usePrinters";
 import { useMaterials } from "@/hooks/useMaterials";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import { calcFDM, calcResin } from "@/lib/calculations";
+import { calc } from "@/lib/calculations";
 import { db } from "@/lib/db";
 import { JobInfoSection } from "@/components/calculator/JobInfoSection";
 import { PrinterSection } from "@/components/calculator/PrinterSection";
@@ -31,42 +31,31 @@ export default function CalculatorPage() {
   const purchasePrice = activePrinter?.purchasePrice ?? draft.manualPurchasePrice;
   const lifetimeHours = activePrinter?.lifetimeHours ?? draft.manualLifetimeHours;
 
-  const activeMaterial = materials.find((m) => m.id === draft.materialId);
-  const pricePerKg = activeMaterial?.pricePerKg ?? draft.manualMaterialPrice;
-  const pricePerLitre = activeMaterial?.pricePerLitre ?? draft.manualMaterialPrice;
+  const totalMaterialCost = draft.draftMaterials.reduce((sum, dm) => {
+    const mat = materials.find((m) => m.id === dm.materialId);
+    if (draft.printerType === "FDM") {
+      const pricePerKg = mat?.pricePerKg ?? dm.manualMaterialPrice;
+      return sum + (dm.filamentUsedGrams * pricePerKg) / 1000;
+    } else {
+      const pricePerLitre = mat?.pricePerLitre ?? dm.manualMaterialPrice;
+      return sum + (dm.resinUsedMl * pricePerLitre) / 1000;
+    }
+  }, 0);
 
-  const result =
-    draft.printerType === "FDM"
-      ? calcFDM({
-          filamentUsedGrams: draft.filamentUsedGrams,
-          pricePerKg,
-          printTimeMinutes: draft.printTimeMinutes,
-          wattage,
-          electricityRate: draft.electricityRate,
-          purchasePrice,
-          lifetimeHours,
-          labourEnabled: draft.labourEnabled,
-          labourTimeMinutes: draft.labourTimeMinutes,
-          labourRate: settings.labourRate,
-          failureRate: draft.failureRate,
-          pricingMode: draft.pricingMode,
-          markupOrMargin: draft.markupOrMargin,
-        })
-      : calcResin({
-          resinUsedMl: draft.resinUsedMl,
-          pricePerLitre,
-          printTimeMinutes: draft.printTimeMinutes,
-          wattage,
-          electricityRate: draft.electricityRate,
-          purchasePrice,
-          lifetimeHours,
-          labourEnabled: draft.labourEnabled,
-          labourTimeMinutes: draft.labourTimeMinutes,
-          labourRate: settings.labourRate,
-          failureRate: draft.failureRate,
-          pricingMode: draft.pricingMode,
-          markupOrMargin: draft.markupOrMargin,
-        });
+  const result = calc({
+    materialCost: totalMaterialCost,
+    printTimeMinutes: draft.printTimeMinutes,
+    wattage,
+    electricityRate: draft.electricityRate,
+    purchasePrice,
+    lifetimeHours,
+    labourEnabled: draft.labourEnabled,
+    labourTimeMinutes: draft.labourTimeMinutes,
+    labourRate: settings.labourRate,
+    failureRate: draft.failureRate,
+    pricingMode: draft.pricingMode,
+    markupOrMargin: draft.markupOrMargin,
+  });
 
   function handleNewJob() {
     const defaultPrinter = printers.find((p) => p.id === settings.defaultPrinterId);
@@ -77,8 +66,14 @@ export default function CalculatorPage() {
       pricingMode: settings.pricingMode,
       markupOrMargin: settings.defaultMarkup,
       printerId: settings.defaultPrinterId ?? "",
-      materialId: settings.defaultMaterialId ?? "",
       printerType: defaultPrinter?.type ?? "FDM",
+      draftMaterials: [{
+        id: "mat-0",
+        materialId: settings.defaultMaterialId ?? "",
+        manualMaterialPrice: 25,
+        filamentUsedGrams: 0,
+        resinUsedMl: 0,
+      }],
     });
   }
 
@@ -86,6 +81,29 @@ export default function CalculatorPage() {
     setSaving(true);
     try {
       const now = new Date().toISOString();
+
+      const jobMaterials = draft.draftMaterials.map((dm) => {
+        const mat = materials.find((m) => m.id === dm.materialId);
+        const name = mat?.name ?? "Custom";
+        const pricePerUnit = mat
+          ? (draft.printerType === "FDM" ? mat.pricePerKg : mat.pricePerLitre)
+          : dm.manualMaterialPrice;
+        const cost = draft.printerType === "FDM"
+          ? (dm.filamentUsedGrams * (mat?.pricePerKg ?? dm.manualMaterialPrice)) / 1000
+          : (dm.resinUsedMl * (mat?.pricePerLitre ?? dm.manualMaterialPrice)) / 1000;
+        return {
+          materialId: mat?.id,
+          materialName: name,
+          filamentUsedGrams: draft.printerType === "FDM" ? dm.filamentUsedGrams : undefined,
+          resinUsedMl: draft.printerType === "Resin" ? dm.resinUsedMl : undefined,
+          materialCost: cost,
+          pricePerUnit,
+        };
+      });
+
+      const materialName = jobMaterials.map((m) => m.materialName).join(", ");
+      const firstMat = jobMaterials[0];
+
       await db.jobs.add({
         id: crypto.randomUUID(),
         name: draft.jobName || `Print ${new Date().toLocaleDateString("en-GB")}`,
@@ -93,10 +111,15 @@ export default function CalculatorPage() {
         printerType: draft.printerType,
         printerId: activePrinter?.id,
         printerName: activePrinter?.name ?? "Manual",
-        materialId: activeMaterial?.id,
-        materialName: activeMaterial?.name ?? "Custom",
-        filamentUsedGrams: draft.printerType === "FDM" ? draft.filamentUsedGrams : undefined,
-        resinUsedMl: draft.printerType === "Resin" ? draft.resinUsedMl : undefined,
+        materialId: firstMat?.materialId,
+        materialName,
+        filamentUsedGrams: draft.printerType === "FDM"
+          ? draft.draftMaterials.reduce((s, m) => s + m.filamentUsedGrams, 0)
+          : undefined,
+        resinUsedMl: draft.printerType === "Resin"
+          ? draft.draftMaterials.reduce((s, m) => s + m.resinUsedMl, 0)
+          : undefined,
+        jobMaterials,
         printTimeMinutes: draft.printTimeMinutes,
         failureRate: draft.failureRate,
         labourEnabled: draft.labourEnabled,
@@ -179,7 +202,11 @@ export default function CalculatorPage() {
             jobName={draft.jobName}
             printerType={draft.printerType}
             onJobNameChange={(v) => draft.patch({ jobName: v })}
-            onPrinterTypeChange={(v) => draft.patch({ printerType: v, printerId: "", materialId: "" })}
+            onPrinterTypeChange={(v) => draft.patch({
+              printerType: v,
+              printerId: "",
+              draftMaterials: [createDraftMaterial()],
+            })}
           />
 
           <PrinterSection
@@ -200,20 +227,13 @@ export default function CalculatorPage() {
           <MaterialSection
             printerType={draft.printerType}
             materials={materials}
-            materialId={draft.materialId}
-            manualMaterialPrice={draft.manualMaterialPrice}
-            onMaterialIdChange={(v) => draft.patch({ materialId: v })}
-            onManualMaterialPriceChange={(v) => draft.patch({ manualMaterialPrice: v })}
+            draftMaterials={draft.draftMaterials}
+            onDraftMaterialsChange={(v) => draft.patch({ draftMaterials: v })}
           />
 
           <PrintDetailsSection
-            printerType={draft.printerType}
-            filamentUsedGrams={draft.filamentUsedGrams}
-            resinUsedMl={draft.resinUsedMl}
             printTimeMinutes={draft.printTimeMinutes}
             failureRate={draft.failureRate}
-            onFilamentChange={(v) => draft.patch({ filamentUsedGrams: v })}
-            onResinChange={(v) => draft.patch({ resinUsedMl: v })}
             onPrintTimeChange={(v) => draft.patch({ printTimeMinutes: v })}
             onFailureRateChange={(v) => draft.patch({ failureRate: v })}
           />

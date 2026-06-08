@@ -37,13 +37,29 @@ export function JobCard({ job }: JobCardProps) {
   });
 
   function handleClone() {
+    let draftMaterials;
+    if (job.jobMaterials && job.jobMaterials.length > 0) {
+      draftMaterials = job.jobMaterials.map((jm) => ({
+        id: crypto.randomUUID(),
+        materialId: jm.materialId ?? "",
+        manualMaterialPrice: jm.pricePerUnit ?? 25,
+        filamentUsedGrams: jm.filamentUsedGrams ?? 0,
+        resinUsedMl: jm.resinUsedMl ?? 0,
+      }));
+    } else {
+      draftMaterials = [{
+        id: crypto.randomUUID(),
+        materialId: job.materialId ?? "",
+        manualMaterialPrice: 25,
+        filamentUsedGrams: job.filamentUsedGrams ?? 0,
+        resinUsedMl: job.resinUsedMl ?? 0,
+      }];
+    }
     patch({
       jobName: job.name,
       printerType: job.printerType,
       printerId: job.printerId ?? "",
-      materialId: job.materialId ?? "",
-      filamentUsedGrams: job.filamentUsedGrams ?? 0,
-      resinUsedMl: job.resinUsedMl ?? 0,
+      draftMaterials,
       printTimeMinutes: job.printTimeMinutes,
       failureRate: job.failureRate,
       labourEnabled: job.labourEnabled,
@@ -161,12 +177,28 @@ export function JobCard({ job }: JobCardProps) {
             })}
           </div>
 
+          {/* Materials breakdown */}
+          {job.jobMaterials && job.jobMaterials.length > 1 ? (
+            <div className="flex flex-col gap-1.5">
+              {job.jobMaterials.map((jm, i) => (
+                <div key={i} className="flex items-center justify-between text-xs">
+                  <span className="text-slate-400">
+                    {jm.materialName}
+                    {jm.filamentUsedGrams != null && ` · ${jm.filamentUsedGrams} g`}
+                    {jm.resinUsedMl != null && ` · ${jm.resinUsedMl} mL`}
+                  </span>
+                  <span className="text-slate-300 tabular-nums">€{safeNum(jm.materialCost).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
           {/* Print details grid */}
           <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
-            {job.filamentUsedGrams != null && (
+            {(!job.jobMaterials || job.jobMaterials.length === 1) && job.filamentUsedGrams != null && (
               <Detail label="Filament" value={`${job.filamentUsedGrams} g`} />
             )}
-            {job.resinUsedMl != null && (
+            {(!job.jobMaterials || job.jobMaterials.length === 1) && job.resinUsedMl != null && (
               <Detail label="Resin" value={`${job.resinUsedMl} mL`} />
             )}
             <Detail label="Print time" value={formatMinutes(job.printTimeMinutes)} />

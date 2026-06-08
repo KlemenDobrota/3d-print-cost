@@ -1,4 +1,4 @@
-import type { CalcInputFDM, CalcInputResin, CalcResult } from "@/types";
+import type { CalcInput, CalcInputFDM, CalcInputResin, CalcResult } from "@/types";
 
 // Clamp to a finite non-negative number; NaN/Infinity/negative → 0.
 function nn(n: number, min = 0): number {
@@ -68,6 +68,23 @@ function computeCommon(
     grossMarginPct,
     markup: markupOrMargin,
   });
+}
+
+export function calc(input: CalcInput): CalcResult {
+  return computeCommon(
+    input.materialCost,
+    input.printTimeMinutes,
+    input.wattage,
+    input.electricityRate,
+    input.purchasePrice,
+    input.lifetimeHours,
+    input.labourEnabled,
+    input.labourTimeMinutes,
+    input.labourRate,
+    input.failureRate,
+    input.pricingMode,
+    input.markupOrMargin
+  );
 }
 
 export function calcFDM(input: CalcInputFDM): CalcResult {

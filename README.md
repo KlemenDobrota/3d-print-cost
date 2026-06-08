@@ -9,6 +9,7 @@ A single-user PWA for calculating the true cost of 3D prints and managing profit
 ## Features
 
 - **Real-time cost breakdown** — material, electricity, printer depreciation, labour, and waste buffer update as you type
+- **Multi-material jobs** — add multiple filaments/colors per print; each material has its own usage and price
 - **FDM & Resin** support with per-printer profiles
 - **Markup / margin pricing modes** — set a target markup % or gross margin %
 - **Printer & material library** — save profiles, reuse across jobs
@@ -78,8 +79,8 @@ Set `NEXT_PUBLIC_APP_URL` in **Vercel → Project → Settings → Environment V
 ### FDM
 
 ```
-materialCost     = filamentUsedGrams × (pricePerKg / 1000)
-electricityCost  = (wattage / 1000) × (printTimeHours) × electricityRate
+materialCost     = Σ filamentUsedGrams_i × (pricePerKg_i / 1000)   (sum across all materials)
+electricityCost  = (wattage / 1000) × printTimeHours × electricityRate
 depreciationCost = (purchasePrice / lifetimeHours) × printTimeHours
 labourCost       = (labourTimeMinutes / 60) × labourRate   (0 if labour disabled)
 wasteCost        = subtotal × (failureRate / 100)
@@ -88,7 +89,9 @@ totalCost        = subtotal + wasteCost
 
 ### Resin
 
-Same as FDM, except: `materialCost = resinUsedMl × (pricePerLitre / 1000)`
+Same as FDM, except each material contributes: `resinUsedMl_i × (pricePerLitre_i / 1000)`
+
+> **Multi-material:** A single job can use multiple filaments/colors. Each material has its own grams used and price. Print time and failure rate apply to the job as a whole.
 
 ### Pricing
 

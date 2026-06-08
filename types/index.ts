@@ -46,6 +46,23 @@ export interface Settings {
   defaultMaterialId?: string;
 }
 
+export interface DraftMaterial {
+  id: string;
+  materialId: string;
+  manualMaterialPrice: number;
+  filamentUsedGrams: number;
+  resinUsedMl: number;
+}
+
+export interface JobMaterial {
+  materialId?: string;
+  materialName: string;
+  filamentUsedGrams?: number;
+  resinUsedMl?: number;
+  materialCost: number;
+  pricePerUnit?: number;
+}
+
 export interface Job {
   id: string;
   name: string;
@@ -53,12 +70,13 @@ export interface Job {
   printerType: "FDM" | "Resin";
   printerId?: string;
   printerName: string;
+  // Legacy single-material fields (kept for backward compat with old saved jobs)
   materialId?: string;
   materialName: string;
-  // FDM
   filamentUsedGrams?: number;
-  // Resin
   resinUsedMl?: number;
+  // Multi-material breakdown (new jobs)
+  jobMaterials?: JobMaterial[];
   // Shared
   printTimeMinutes: number;
   failureRate: number;
@@ -78,6 +96,21 @@ export interface Job {
   grossMarginPct: number;
   notes?: string;
   createdAt: string;
+}
+
+export interface CalcInput {
+  materialCost: number;
+  printTimeMinutes: number;
+  wattage: number;
+  electricityRate: number;
+  purchasePrice: number;
+  lifetimeHours: number;
+  labourEnabled: boolean;
+  labourTimeMinutes: number;
+  labourRate: number;
+  failureRate: number;
+  pricingMode: "markup" | "margin";
+  markupOrMargin: number;
 }
 
 export interface CalcInputFDM {
