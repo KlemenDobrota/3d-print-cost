@@ -52,7 +52,7 @@ export function CostCard({ result, pieceCount, effectiveSellingPrice, labourEnab
                 €{sellingPricePerPiece.toFixed(2)}
               </p>
               <p className="text-xs text-slate-400 mt-1">
-                {safePieces} pieces · <span className="text-slate-200 tabular">€{effectiveSellingPrice.toFixed(2)}</span> total
+                {safePieces} pcs · <span className="text-slate-200 tabular">€{result.totalCost.toFixed(2)}</span> cost · <span className="text-slate-200 tabular">€{effectiveSellingPrice.toFixed(2)}</span> sell
               </p>
               <p className="text-xs text-slate-400 mt-0.5">
                 Cost <span className="text-slate-200 tabular">€{costPerPiece.toFixed(2)}</span>/pc · Profit <span className="text-slate-200 tabular">€{profitPerPiece.toFixed(2)}</span>/pc

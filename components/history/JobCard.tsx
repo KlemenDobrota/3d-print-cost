@@ -160,10 +160,17 @@ export function JobCard({ job }: JobCardProps) {
           {/* Cost summary */}
           <div className="flex justify-between items-center">
             <div>
-              <p className="text-xs text-slate-400 mb-0.5">Total cost</p>
+              <p className="text-xs text-slate-400 mb-0.5">
+                {safePieces > 1 ? `Total cost (${safePieces} pcs)` : "Total cost"}
+              </p>
               <p className="text-2xl font-semibold text-slate-50 tabular-nums">
                 €{safeNum(job.totalCost).toFixed(2)}
               </p>
+              {safePieces > 1 && (
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Cost <span className="text-slate-200 tabular-nums">€{(safeNum(job.totalCost) / safePieces).toFixed(2)}</span>/pc · Sell <span className="text-slate-200 tabular-nums">€{(safeNum(job.sellingPrice) / safePieces).toFixed(2)}</span>/pc
+                </p>
+              )}
             </div>
             <span className="inline-flex items-center gap-1.5 bg-green-900/40 border border-green-800/50 text-green-400 text-xs font-semibold px-2.5 py-1 rounded-full">
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 flex-shrink-0" />
