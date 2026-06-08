@@ -106,6 +106,7 @@ export function MaterialSection({
                     value={dm.manualMaterialPrice === 0 ? "" : dm.manualMaterialPrice}
                     placeholder="0"
                     onChange={(e) => updateEntry(dm.id, { manualMaterialPrice: Math.max(0, parseFloat(e.target.value) || 0) })}
+                    onWheel={(e) => e.currentTarget.blur()}
                     className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-14 pl-7 text-slate-50 text-base focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">
@@ -131,6 +132,7 @@ export function MaterialSection({
                     const v = Math.max(0, parseFloat(e.target.value) || 0);
                     updateEntry(dm.id, printerType === "FDM" ? { filamentUsedGrams: v } : { resinUsedMl: v });
                   }}
+                  onWheel={(e) => e.currentTarget.blur()}
                   className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-10 pl-3 text-slate-50 text-base focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">

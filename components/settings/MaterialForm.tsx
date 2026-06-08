@@ -190,6 +190,7 @@ function NumField({ label, value, unit, unitLeft, onChange, min = 0, step = 1 }:
           step={step}
           value={value}
           onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+          onWheel={(e) => e.currentTarget.blur()}
           className={`w-full h-11 rounded-lg bg-slate-700 border border-slate-600 text-right text-slate-50 text-sm focus:outline-none focus:border-indigo-500 ${unitLeft ? "pl-7 pr-3" : "pl-3 pr-12"}`}
         />
         {!unitLeft && (

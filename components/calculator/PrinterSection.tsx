@@ -92,6 +92,7 @@ export function PrinterSection({
             value={electricityRate === 0 ? "" : electricityRate}
             placeholder="0"
             onChange={(e) => onElectricityRateChange(Math.max(0, parseFloat(e.target.value) || 0))}
+            onWheel={(e) => e.currentTarget.blur()}
             className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-14 pl-7 text-slate-50 text-base focus:outline-none focus:border-indigo-500 placeholder:text-slate-500"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">/kWh</span>
@@ -126,6 +127,7 @@ function NumField({ label, value, unit, unitLeft, onChange, min = 0, step = 1 }:
           value={value === 0 ? "" : value}
           placeholder="0"
           onChange={(e) => onChange(Math.max(0, parseFloat(e.target.value) || 0))}
+          onWheel={(e) => e.currentTarget.blur()}
           className={cn(
             "w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right text-slate-50 text-base focus:outline-none focus:border-indigo-500 placeholder:text-slate-500",
             unitLeft ? "pl-7 pr-3" : "pl-3 pr-12"

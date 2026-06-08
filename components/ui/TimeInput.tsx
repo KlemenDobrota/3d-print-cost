@@ -50,6 +50,7 @@ export function TimeInput({
             value={hrs === 0 ? "" : hrs}
             placeholder="0"
             onChange={handleHrs}
+            onWheel={(e) => e.currentTarget.blur()}
             className={inputClass}
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">
@@ -64,6 +65,7 @@ export function TimeInput({
             value={mins === 0 ? "" : mins}
             placeholder="0"
             onChange={handleMins}
+            onWheel={(e) => e.currentTarget.blur()}
             className={inputClass}
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">

@@ -230,6 +230,7 @@ function RateInput({ value, unitLeft, unitRight, step = 1, onChange }: RateInput
         step={step}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
+        onWheel={(e) => e.currentTarget.blur()}
         className={`w-full h-12 rounded-xl bg-slate-800 border border-slate-700 text-right text-slate-50 text-sm focus:outline-none focus:border-indigo-500 ${unitLeft ? "pl-7" : "pl-3"} ${unitRight ? "pr-14" : "pr-3"}`}
       />
       {unitRight && (

@@ -49,6 +49,7 @@ export function PricingSection({
             value={markupOrMargin === 0 ? "" : markupOrMargin}
             placeholder="0"
             onChange={handleChange}
+            onWheel={(e) => e.currentTarget.blur()}
             className="w-full h-12 rounded-lg bg-slate-700 border border-slate-600 text-right pr-10 pl-3 text-slate-50 text-base focus:outline-none focus:border-indigo-500 tabular text-2xl font-semibold placeholder:text-slate-500"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-slate-400 pointer-events-none">%</span>
