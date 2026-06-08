@@ -11,6 +11,7 @@ A single-user PWA for calculating the true cost of 3D prints and managing profit
 - **Real-time cost breakdown** — material, electricity, printer depreciation, labour, and waste buffer update as you type
 - **Multi-material jobs** — add multiple filaments/colors per print; each material has its own usage and price
 - **FDM & Resin** support with per-printer profiles
+- **Quantity & custom pricing** — enter the number of pieces in an order; the cost card shows per-piece and total selling price. Optionally override the calculated price with a custom price per piece (e.g. from a customer quote)
 - **Markup / margin pricing modes** — set a target markup % or gross margin %
 - **Printer & material library** — save profiles, reuse across jobs
 - **Job history** — browse, search, expand, and clone past jobs back to the calculator
@@ -97,6 +98,18 @@ Same as FDM, except each material contributes: `resinUsedMl_i × (pricePerLitre_
 
 - **Markup mode:** `sellingPrice = totalCost × (1 + markup / 100)`
 - **Margin mode:** `sellingPrice = totalCost / (1 − margin / 100)`
+
+### Multi-piece orders
+
+When a job produces more than one piece, set **Number of pieces** in the Quantity section. The cost card then shows:
+
+- **Selling price / piece** = `sellingPrice ÷ pieceCount`
+- **Total selling price** = `sellingPrice` (as calculated above)
+
+Optionally enable **Custom price per piece** to override the markup/margin calculation with a known quote price:
+
+- `effectiveSellingPrice = customPricePerPiece × pieceCount`
+- Margin is recalculated against `effectiveSellingPrice`
 
 ---
 

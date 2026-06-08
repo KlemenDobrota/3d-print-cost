@@ -24,6 +24,9 @@ export interface CalculatorDraft {
   labourTimeMinutes: number;
   pricingMode: "markup" | "margin";
   markupOrMargin: number;
+  pieceCount: number;
+  customPriceEnabled: boolean;
+  customPricePerPiece: number;
   notes: string;
 }
 
@@ -42,6 +45,9 @@ const INITIAL: CalculatorDraft = {
   labourTimeMinutes: 0,
   pricingMode: "markup",
   markupOrMargin: 200,
+  pieceCount: 1,
+  customPriceEnabled: false,
+  customPricePerPiece: 0,
   notes: "",
 };
 
@@ -83,6 +89,8 @@ function mergeDraft(persisted: unknown, current: CalculatorStore): CalculatorSto
       (clean as Record<string, unknown>)[key] = pVal;
     }
   }
+  const pc = clean.pieceCount;
+  clean.pieceCount = Number.isInteger(pc) && pc >= 1 ? Math.min(pc, 100000) : 1;
   return { ...current, ...clean };
 }
 
@@ -95,7 +103,7 @@ export const useCalculatorStore = create<CalculatorStore>()(
     }),
     {
       name: "calculator-draft",
-      version: 2,
+      version: 3,
       merge: mergeDraft,
       skipHydration: true,
     }

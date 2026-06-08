@@ -94,6 +94,8 @@ export interface Job {
   markup: number;
   sellingPrice: number;
   grossMarginPct: number;
+  pieceCount?: number;
+  customPricePerPiece?: number;
   notes?: string;
   createdAt: string;
 }

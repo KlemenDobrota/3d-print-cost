@@ -36,6 +36,11 @@ export function JobCard({ job }: JobCardProps) {
     year: "numeric",
   });
 
+  const safePieces =
+    Number.isInteger(job.pieceCount) && (job.pieceCount ?? 0) > 1
+      ? Math.min(job.pieceCount!, 100000)
+      : 1;
+
   function handleClone() {
     let draftMaterials;
     if (job.jobMaterials && job.jobMaterials.length > 0) {
@@ -66,6 +71,12 @@ export function JobCard({ job }: JobCardProps) {
       labourTimeMinutes: job.labourTimeMinutes ?? 0,
       pricingMode: "markup",
       markupOrMargin: job.markup,
+      pieceCount: safePieces,
+      customPriceEnabled: job.customPricePerPiece != null,
+      customPricePerPiece:
+        Number.isFinite(job.customPricePerPiece) && (job.customPricePerPiece ?? -1) >= 0
+          ? Math.min(job.customPricePerPiece!, 1e7)
+          : 0,
     });
     router.push("/");
   }
@@ -126,10 +137,17 @@ export function JobCard({ job }: JobCardProps) {
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <div className="text-right">
-              <p className="text-xs text-slate-400 leading-none mb-0.5">Sell</p>
+              <p className="text-xs text-slate-400 leading-none mb-0.5">
+                Sell{safePieces > 1 ? ` · ${safePieces} pcs` : ""}
+              </p>
               <p className="text-sm font-semibold text-slate-50 tabular-nums">
                 €{safeNum(job.sellingPrice).toFixed(2)}
               </p>
+              {safePieces > 1 && (
+                <p className="text-xs text-slate-400 tabular-nums">
+                  €{(safeNum(job.sellingPrice) / safePieces).toFixed(2)}/pc
+                </p>
+              )}
             </div>
             <ChevronIcon expanded={expanded} />
           </div>
@@ -200,6 +218,9 @@ export function JobCard({ job }: JobCardProps) {
             )}
             {(!job.jobMaterials || job.jobMaterials.length === 1) && job.resinUsedMl != null && (
               <Detail label="Resin" value={`${job.resinUsedMl} mL`} />
+            )}
+            {safePieces > 1 && (
+              <Detail label="Pieces" value={`${safePieces} pcs`} />
             )}
             <Detail label="Print time" value={formatMinutes(job.printTimeMinutes)} />
             <Detail label="Failure rate" value={`${job.failureRate}%`} />

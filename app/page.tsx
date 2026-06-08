@@ -13,6 +13,7 @@ import { MaterialSection } from "@/components/calculator/MaterialSection";
 import { PrintDetailsSection } from "@/components/calculator/PrintDetailsSection";
 import { LabourSection } from "@/components/calculator/LabourSection";
 import { PricingSection } from "@/components/calculator/PricingSection";
+import { QuantitySection } from "@/components/calculator/QuantitySection";
 import { CostCard } from "@/components/calculator/CostCard";
 import { Toast, useToast } from "@/components/ui/Toast";
 
@@ -56,6 +57,16 @@ export default function CalculatorPage() {
     pricingMode: draft.pricingMode,
     markupOrMargin: draft.markupOrMargin,
   });
+
+  const safePieceCount = Math.max(1, draft.pieceCount);
+  const effectiveSellingPrice =
+    draft.customPriceEnabled && draft.customPricePerPiece > 0
+      ? draft.customPricePerPiece * safePieceCount
+      : result.sellingPrice;
+  const effectiveGrossMarginPct =
+    effectiveSellingPrice > 0
+      ? ((effectiveSellingPrice - result.totalCost) / effectiveSellingPrice) * 100
+      : 0;
 
   function handleNewJob() {
     const defaultPrinter = printers.find((p) => p.id === settings.defaultPrinterId);
@@ -125,6 +136,11 @@ export default function CalculatorPage() {
         labourEnabled: draft.labourEnabled,
         labourTimeMinutes: draft.labourEnabled ? draft.labourTimeMinutes : undefined,
         labourRate: draft.labourEnabled ? settings.labourRate : undefined,
+        pieceCount: safePieceCount > 1 ? safePieceCount : undefined,
+        customPricePerPiece:
+          draft.customPriceEnabled && draft.customPricePerPiece > 0
+            ? draft.customPricePerPiece
+            : undefined,
         materialCost: result.materialCost,
         electricityCost: result.electricityCost,
         depreciationCost: result.depreciationCost,
@@ -132,8 +148,8 @@ export default function CalculatorPage() {
         wasteCost: result.wasteCost,
         totalCost: result.totalCost,
         markup: result.markup,
-        sellingPrice: result.sellingPrice,
-        grossMarginPct: result.grossMarginPct,
+        sellingPrice: effectiveSellingPrice,
+        grossMarginPct: effectiveGrossMarginPct,
         notes: draft.notes || undefined,
         createdAt: now,
       });
@@ -253,8 +269,19 @@ export default function CalculatorPage() {
             onMarkupOrMarginChange={(v) => draft.patch({ markupOrMargin: v })}
           />
 
+          <QuantitySection
+            pieceCount={draft.pieceCount}
+            customPriceEnabled={draft.customPriceEnabled}
+            customPricePerPiece={draft.customPricePerPiece}
+            onPieceCountChange={(v) => draft.patch({ pieceCount: v })}
+            onCustomPriceEnabledChange={(v) => draft.patch({ customPriceEnabled: v })}
+            onCustomPricePerPieceChange={(v) => draft.patch({ customPricePerPiece: v })}
+          />
+
           <CostCard
             result={result}
+            pieceCount={safePieceCount}
+            effectiveSellingPrice={effectiveSellingPrice}
             pricingMode={draft.pricingMode}
             labourEnabled={draft.labourEnabled}
             onSave={handleSave}

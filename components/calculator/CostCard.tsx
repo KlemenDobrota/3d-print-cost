@@ -3,6 +3,8 @@ import type { CalcResult } from "@/types";
 
 interface CostCardProps {
   result: CalcResult;
+  pieceCount: number;
+  effectiveSellingPrice: number;
   pricingMode: "markup" | "margin";
   labourEnabled: boolean;
   onSave: () => void;
@@ -17,8 +19,15 @@ const COLORS = {
   waste: "#ef4444",
 };
 
-export function CostCard({ result, labourEnabled, onSave, saving }: CostCardProps) {
-  const profit = result.sellingPrice - result.totalCost;
+export function CostCard({ result, pieceCount, effectiveSellingPrice, labourEnabled, onSave, saving }: CostCardProps) {
+  const safePieces = Math.max(1, pieceCount);
+  const profit = effectiveSellingPrice - result.totalCost;
+  const multiPiece = safePieces > 1;
+  const sellingPricePerPiece = effectiveSellingPrice / safePieces;
+  const profitPerPiece = profit / safePieces;
+  const effectiveMarginPct = effectiveSellingPrice > 0
+    ? ((effectiveSellingPrice - result.totalCost) / effectiveSellingPrice) * 100
+    : 0;
 
   const rows = [
     { label: "Material", value: result.materialCost, color: COLORS.material },
@@ -35,17 +44,34 @@ export function CostCard({ result, labourEnabled, onSave, saving }: CostCardProp
       {/* Selling price header */}
       <div className="flex items-start justify-between gap-2">
         <div>
-          <p className="text-xs text-slate-400 mb-0.5">Selling price</p>
-          <p className="text-4xl font-semibold text-slate-50 tabular leading-none">
-            €{result.sellingPrice.toFixed(2)}
-          </p>
-          <p className="text-xs text-slate-400 mt-1">
-            Profit <span className="text-slate-200 tabular">€{profit.toFixed(2)}</span> per print
-          </p>
+          {multiPiece ? (
+            <>
+              <p className="text-xs text-slate-400 mb-0.5">Selling price / piece</p>
+              <p className="text-4xl font-semibold text-slate-50 tabular leading-none">
+                €{sellingPricePerPiece.toFixed(2)}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                {safePieces} pieces · <span className="text-slate-200 tabular">€{effectiveSellingPrice.toFixed(2)}</span> total
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Profit <span className="text-slate-200 tabular">€{profitPerPiece.toFixed(2)}</span>/pc · <span className="text-slate-200 tabular">€{profit.toFixed(2)}</span> total
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-slate-400 mb-0.5">Selling price</p>
+              <p className="text-4xl font-semibold text-slate-50 tabular leading-none">
+                €{effectiveSellingPrice.toFixed(2)}
+              </p>
+              <p className="text-xs text-slate-400 mt-1">
+                Profit <span className="text-slate-200 tabular">€{profit.toFixed(2)}</span> per print
+              </p>
+            </>
+          )}
         </div>
         <span className="flex-shrink-0 flex items-center gap-1.5 bg-green-900/40 border border-green-800/50 text-green-400 text-xs font-semibold px-2.5 py-1 rounded-full">
           <span className="w-2 h-2 rounded-full bg-green-400 flex-shrink-0" />
-          {result.grossMarginPct.toFixed(0)} % margin
+          {effectiveMarginPct.toFixed(0)} % margin
         </span>
       </div>
 
@@ -54,6 +80,9 @@ export function CostCard({ result, labourEnabled, onSave, saving }: CostCardProp
 
       {/* Cost breakdown rows */}
       <div className="flex flex-col gap-3">
+        {multiPiece && (
+          <p className="text-xs text-slate-500 -mb-1">Total job cost breakdown</p>
+        )}
         {rows.map((row) => {
           const pct = total > 0.001 ? (row.value / total) * 100 : 0;
           return (
