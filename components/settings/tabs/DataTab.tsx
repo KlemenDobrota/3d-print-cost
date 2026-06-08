@@ -2,7 +2,7 @@
 import { useRef, useState, useEffect } from "react";
 import { db } from "@/lib/db";
 import { Toast, useToast } from "@/components/ui/Toast";
-import type { Printer, Material, Job, Settings } from "@/types";
+import type { Printer, Material, Job, JobMaterial, Settings } from "@/types";
 
 const PRINTER_TYPES = new Set(["FDM", "Resin"]);
 const MATERIAL_TYPES = new Set(["FDM", "Resin"]);
@@ -83,8 +83,27 @@ function isValidJob(r: unknown): r is Job {
   );
 }
 
+function normalizeJobMaterial(m: unknown): JobMaterial | null {
+  if (typeof m !== "object" || m === null) return null;
+  const jm = m as Record<string, unknown>;
+  if (typeof jm.materialName !== "string") return null;
+  return {
+    materialId: typeof jm.materialId === "string" ? jm.materialId.slice(0, 100) : undefined,
+    materialName: String(jm.materialName).slice(0, 80),
+    filamentUsedGrams: jm.filamentUsedGrams !== undefined ? Math.max(0, safeFinite(jm.filamentUsedGrams, 0)) : undefined,
+    resinUsedMl: jm.resinUsedMl !== undefined ? Math.max(0, safeFinite(jm.resinUsedMl, 0)) : undefined,
+    materialCost: Math.max(0, safeFinite(jm.materialCost, 0)),
+    pricePerUnit: jm.pricePerUnit !== undefined ? Math.max(0, safeFinite(jm.pricePerUnit, 0)) : undefined,
+  };
+}
+
 function normalizeJob(r: Job): Job {
   const rr = r as unknown as Record<string, unknown>;
+
+  const jobMaterials = Array.isArray(rr.jobMaterials)
+    ? (rr.jobMaterials as unknown[]).map(normalizeJobMaterial).filter((m): m is JobMaterial => m !== null)
+    : undefined;
+
   return {
     id: String(r.id).slice(0, 100),
     name: String(r.name).slice(0, 120),
@@ -96,20 +115,23 @@ function normalizeJob(r: Job): Job {
     materialName: typeof rr.materialName === "string" ? rr.materialName.slice(0, 80) : "",
     filamentUsedGrams: rr.filamentUsedGrams !== undefined ? Math.max(0, safeFinite(rr.filamentUsedGrams, 0)) : undefined,
     resinUsedMl: rr.resinUsedMl !== undefined ? Math.max(0, safeFinite(rr.resinUsedMl, 0)) : undefined,
+    jobMaterials: jobMaterials && jobMaterials.length > 0 ? jobMaterials : undefined,
     printTimeMinutes: Math.max(0, safeFinite(r.printTimeMinutes, 0)),
     failureRate: Math.min(100, Math.max(0, safeFinite(r.failureRate, 0))),
     labourEnabled: Boolean(rr.labourEnabled),
     labourTimeMinutes: rr.labourTimeMinutes !== undefined ? Math.max(0, safeFinite(rr.labourTimeMinutes, 0)) : undefined,
     labourRate: rr.labourRate !== undefined ? Math.max(0, safeFinite(rr.labourRate, 0)) : undefined,
-    materialCost: safeFinite(r.materialCost, 0),
-    electricityCost: safeFinite(r.electricityCost, 0),
-    depreciationCost: safeFinite(r.depreciationCost, 0),
-    labourCost: safeFinite(r.labourCost, 0),
-    wasteCost: safeFinite(r.wasteCost, 0),
-    totalCost: safeFinite(r.totalCost, 0),
-    markup: safeFinite(r.markup, 0),
-    sellingPrice: safeFinite(r.sellingPrice, 0),
+    materialCost: Math.max(0, safeFinite(r.materialCost, 0)),
+    electricityCost: Math.max(0, safeFinite(r.electricityCost, 0)),
+    depreciationCost: Math.max(0, safeFinite(r.depreciationCost, 0)),
+    labourCost: Math.max(0, safeFinite(r.labourCost, 0)),
+    wasteCost: Math.max(0, safeFinite(r.wasteCost, 0)),
+    totalCost: Math.max(0, safeFinite(r.totalCost, 0)),
+    markup: Math.max(0, safeFinite(r.markup, 0)),
+    sellingPrice: Math.max(0, safeFinite(r.sellingPrice, 0)),
     grossMarginPct: safeFinite(r.grossMarginPct, 0),
+    pieceCount: rr.pieceCount !== undefined ? Math.max(1, Math.round(safeFinite(rr.pieceCount, 1))) : undefined,
+    customPricePerPiece: rr.customPricePerPiece !== undefined ? Math.max(0, safeFinite(rr.customPricePerPiece, 0)) : undefined,
     notes: r.notes ? String(r.notes).slice(0, 1000) : undefined,
     createdAt: String(r.createdAt).slice(0, 30),
   };
@@ -209,13 +231,20 @@ export function DataTab() {
       }
 
       const d = data as Record<string, unknown>;
-      if ((d.version as number) !== 1) {
+      if (typeof d.version !== "number" || d.version !== 1) {
         throw new Error(`Unsupported backup version: ${d.version}`);
       }
 
-      const printers = (d.printers as unknown[]).filter(isValidPrinter).map(normalizePrinter);
-      const materials = (d.materials as unknown[]).filter(isValidMaterial).map(normalizeMaterial);
-      const jobs = (d.jobs as unknown[]).filter(isValidJob).map(normalizeJob);
+      const rawPrinters = d.printers as unknown[];
+      const rawMaterials = d.materials as unknown[];
+      const rawJobs = d.jobs as unknown[];
+      if (rawJobs.length > 50_000 || rawPrinters.length > 5_000 || rawMaterials.length > 5_000) {
+        throw new Error("Backup file is too large to import");
+      }
+
+      const printers = rawPrinters.filter(isValidPrinter).map(normalizePrinter);
+      const materials = rawMaterials.filter(isValidMaterial).map(normalizeMaterial);
+      const jobs = rawJobs.filter(isValidJob).map(normalizeJob);
       const settings = Array.isArray(d.settings)
         ? (d.settings as unknown[]).filter(isValidSettings).map(normalizeSettings)
         : [];
@@ -228,9 +257,9 @@ export function DataTab() {
       ]);
 
       const skipped =
-        (d.printers as unknown[]).length - printers.length +
-        (d.materials as unknown[]).length - materials.length +
-        (d.jobs as unknown[]).length - jobs.length;
+        rawPrinters.length - printers.length +
+        rawMaterials.length - materials.length +
+        rawJobs.length - jobs.length;
 
       show(
         skipped > 0
