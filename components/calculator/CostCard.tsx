@@ -24,6 +24,7 @@ export function CostCard({ result, pieceCount, effectiveSellingPrice, labourEnab
   const profit = effectiveSellingPrice - result.totalCost;
   const multiPiece = safePieces > 1;
   const sellingPricePerPiece = effectiveSellingPrice / safePieces;
+  const costPerPiece = result.totalCost / safePieces;
   const profitPerPiece = profit / safePieces;
   const effectiveMarginPct = effectiveSellingPrice > 0
     ? ((effectiveSellingPrice - result.totalCost) / effectiveSellingPrice) * 100
@@ -54,7 +55,7 @@ export function CostCard({ result, pieceCount, effectiveSellingPrice, labourEnab
                 {safePieces} pieces · <span className="text-slate-200 tabular">€{effectiveSellingPrice.toFixed(2)}</span> total
               </p>
               <p className="text-xs text-slate-400 mt-0.5">
-                Profit <span className="text-slate-200 tabular">€{profitPerPiece.toFixed(2)}</span>/pc · <span className="text-slate-200 tabular">€{profit.toFixed(2)}</span> total
+                Cost <span className="text-slate-200 tabular">€{costPerPiece.toFixed(2)}</span>/pc · Profit <span className="text-slate-200 tabular">€{profitPerPiece.toFixed(2)}</span>/pc
               </p>
             </>
           ) : (

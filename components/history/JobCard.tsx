@@ -222,6 +222,12 @@ export function JobCard({ job }: JobCardProps) {
             {safePieces > 1 && (
               <Detail label="Pieces" value={`${safePieces} pcs`} />
             )}
+            {safePieces > 1 && (
+              <Detail label="Cost / piece" value={`€${(safeNum(job.totalCost) / safePieces).toFixed(2)}`} />
+            )}
+            {safePieces > 1 && (
+              <Detail label="Price / piece" value={`€${(safeNum(job.sellingPrice) / safePieces).toFixed(2)}`} />
+            )}
             <Detail label="Print time" value={formatMinutes(job.printTimeMinutes)} />
             <Detail label="Failure rate" value={`${job.failureRate}%`} />
             {job.labourEnabled && job.labourTimeMinutes != null && (
